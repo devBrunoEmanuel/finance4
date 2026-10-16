@@ -1,0 +1,10 @@
+import { Tabs } from 'expo-router';
+
+export default function TabsLayout() {
+  return (
+    <Tabs>
+      <Tabs.Screen name="accounts" options={{ title: 'Contas' }} />
+      <Tabs.Screen name="accounts/new" options={{ href: null, title: 'Nova conta' }} />
+    </Tabs>
+  );
+}
