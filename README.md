@@ -17,6 +17,7 @@ total e gerenciar lançamentos em uma interface simples em português.
 
 ## Estrutura do Expo Router
 
+```
 app/
 ├── (tabs)/
 │   ├── accounts/
@@ -28,6 +29,7 @@ app/
 ├── index.tsx            (Welcome)
 ├── sign-in.tsx          (SignIn)
 ├── sign-up.tsx          (SignUp)
+```
 
 ## Tecnologias e pacotes
 
