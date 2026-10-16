@@ -45,8 +45,14 @@ export default function SignInScreen() {
       {loading ? (
         <ActivityIndicator size="large" />
       ) : (
-        <View>
-          <Button title="Entrar" onPress={handleSignIn} />
+        <View style={{ alignItems: 'center' }}>
+          <Pressable
+            style={styles.btnSignIn} 
+            onPress={handleSignIn}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Entrar</Text>
+          </Pressable>
+
           <Pressable style={styles.link} onPress={() => router.replace('/sign-up')}>
             <Text style={styles.linkText}>Não tem conta? Cadastre-se</Text>
           </Pressable>
@@ -57,9 +63,10 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 16 },
+  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: "#b507c530" },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24, color: "#26002b" },
+  input: { borderWidth: 1, borderColor: '#b507c5', borderRadius: 8, padding: 12, marginBottom: 16 },
   link: { marginTop: 16, alignItems: 'center' },
   linkText: { color: '#0066cc' },
+  btnSignIn: { backgroundColor: '#b507c5', padding: 16, borderRadius: 8, marginTop: 24, width: '90%', justifyContent: 'center', alignItems: 'center' },
 });

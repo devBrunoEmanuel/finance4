@@ -1,0 +1,23 @@
+import { View, Text, Button, StyleSheet, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+
+export default function WelcomeScreen() {
+  const router = useRouter();
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Bem-vindo 👋</Text>
+      <Text style={styles.subtitle}>Gerencie suas contas com facilidade</Text>
+      <Pressable style={{ backgroundColor: '#0066cc', padding: 16, borderRadius: 8, marginTop: 24 }} onPress={() => router.push('/(tabs)/accounts')}></Pressable>
+      <Button title="Entrar" onPress={() => router.push('/sign-in')} />
+      <View style={{ height: 12 }} />
+      <Button title="Criar conta" color="#28a745" onPress={() => router.push('/sign-up')} />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  title: { fontSize: 32, fontWeight: 'bold', marginBottom: 8 },
+  subtitle: { fontSize: 16, color: '#666', marginBottom: 32 },
+});

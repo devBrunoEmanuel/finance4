@@ -65,23 +65,31 @@ export default function SignUpScreen() {
         onChangeText={setConfirm}
       />
 
-      {loading ? (
-        <ActivityIndicator size="large" />
-      ) : (
-        <Button title="Cadastrar" onPress={handleSignUp} />
-      )}
+      <View style={{ alignItems: 'center' }}>
+        {loading ? (
+          <ActivityIndicator size="large" />
+        ) : (
+          <Pressable
+            style={styles.btnSignIn} 
+            onPress={handleSignUp}
+          >
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Cadastrar</Text>
+          </Pressable>
+        )}
 
-      <Pressable style={styles.link} onPress={() => router.replace('/sign-in')}>
-        <Text style={styles.linkText}>Já tem conta? Entrar</Text>
-      </Pressable>
+        <Pressable style={styles.link} onPress={() => router.replace('/sign-in')}>
+          <Text style={styles.linkText}>Já tem conta? Entrar</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24 },
+  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: "#b507c530" },
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, marginBottom: 16 },
+  input: { borderWidth: 1, borderColor: '#b507c5', borderRadius: 8, padding: 12, marginBottom: 16 },
   link: { marginTop: 16, alignItems: 'center' },
   linkText: { color: '#0066cc' },
+  btnSignIn: { backgroundColor: '#b507c5', padding: 16, borderRadius: 8, marginTop: 24, width: '90%', justifyContent: 'center', alignItems: 'center' },
 });
