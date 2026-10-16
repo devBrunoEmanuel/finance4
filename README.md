@@ -94,6 +94,47 @@ no projeto.
    Configure também as permissões de leitura, inclusão, edição e remoção
    conforme as regras de acesso do seu projeto.
 
+### Configuração do Supabase
+
+Execute o SQL abaixo no Supabase:
+
+```sql
+create table accounts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references auth.users not null,
+  label text not null,
+  date timestamptz not null default now(),
+  value numeric not null,
+  type text not null check (type in ('income', 'expense')),
+  created_at timestamptz default now()
+);
+
+-- RLS: cada usuário só vê suas próprias contas
+alter table accounts enable row level security;
+
+create policy "Usuários veem suas próprias contas"
+  on accounts for select
+  using (auth.uid() = user_id);
+
+create policy "Usuários inserem suas próprias contas"
+  on accounts for insert
+  with check (auth.uid() = user_id);
+
+-- Trigger que preenche user_id automaticamente no INSERT
+create or replace function public.handle_new_account()
+returns trigger as $$
+begin
+  new.user_id := auth.uid();
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_account_created
+  before insert on public.accounts
+  for each row
+  execute function public.handle_new_account();
+```
+
 ## Executar
 
 Inicie o servidor de desenvolvimento:
