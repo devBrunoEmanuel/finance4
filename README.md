@@ -1,5 +1,11 @@
 # Finance4
 
+**Autor**: Flávio Augusto de Freitas ([zz4fff@gmail.com](mailto:zz4fff@gmail.com))
+
+![Flávio|O autor|100](https://github.com/zz4fff.png)
+
+## Descrição
+
 Aplicativo mobile de controle financeiro pessoal, desenvolvido com Expo e React
 Native. O Finance4 permite registrar receitas e despesas, acompanhar o saldo
 total e gerenciar lançamentos em uma interface simples em português.
@@ -14,6 +20,23 @@ total e gerenciar lançamentos em uma interface simples em português.
 - Remoção de lançamentos pelo menu exibido ao pressionar um item.
 - Valores formatados em reais (BRL).
 - Execução em Android, iOS e Web.
+
+## Criação do projeto e dependências
+
+```bash
+npx create-expo-app@latest my-app --template blank-typescript
+cd my-app
+npx expo install expo-router expo-linking expo-constants expo-status-bar react-native-safe-area-context react-native-screens
+npm install @supabase/supabase-js expo-secure-store
+```
+
+No `package.json`, adicione o entry point do Expo Router:
+
+```json
+{
+  "main": "expo-router/entry"
+}
+```
 
 ## Estrutura do Expo Router
 
@@ -65,6 +88,10 @@ no projeto.
 | `react-native-screens` | Integração otimizada das telas de navegação nativa. |
 | `react-dom` | Renderização React para Web. |
 | `react-native-web` | Compatibilidade dos componentes React Native com Web. |
+
+```bash
+npm install react-native-url-polyfill @react-native-async-storage/async-storage
+```
 
 ### Dependências de desenvolvimento
 
@@ -135,12 +162,51 @@ create trigger on_account_created
   execute function public.handle_new_account();
 ```
 
+### Realtime do Supabase — atualização em tempo real (bônus)
+
+Em `accounts.tsx`, se você quer que a lista atualize automaticamente mesmo que outra pessoa/dispositivo insira uma conta, use o Realtime do Supabase. Ele escuta mudanças na tabela via WebSocket.
+
+```tsx
+import { RealtimeChannel } from '@supabase/supabase-js';
+
+// Dentro do componente:
+useEffect(() => {
+  loadAccounts();
+
+  // Inscreve em mudanças na tabela 'accounts'
+  const channel: RealtimeChannel = supabase
+    .channel('accounts-changes')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'accounts' },
+      (payload) => {
+        console.log('Mudança detectada:', payload);
+        loadAccounts(); // recarrega tudo (poderia otimizar aplicando o delta)
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
+```
+
+>**Importante**: para o Realtime funcionar, a tabela precisa ter publicação habilitada no Supabase:
+>Dashboard → Database → Publications → supabase_realtime → marque `accounts`.
+
 ## Executar
 
 Inicie o servidor de desenvolvimento:
 
 ```bash
 npm start
+```
+
+ou
+
+```bash
+npx expo start
 ```
 
 Ou abra diretamente em uma plataforma:
@@ -153,6 +219,8 @@ npm run web
 
 ## Paleta de cores
 
+Abaixo algumas cores usadas no aplicativo, com seus códigos hexadecimais e aplicações:
+
 | Cor | Código | Aplicação |
 | --- | --- | --- |
 | Roxo principal | `#B507C5` | Ações, ícones, bordas e destaques. |
@@ -164,3 +232,5 @@ npm run web
 | Verde | `#28A745` / `#D4EDDA` | Receitas e seleção do tipo receita. |
 | Vermelho | `#DC3545` / `#F8D7DA` | Despesas e seleção do tipo despesa. |
 | Vermelho de alerta | `#E53E3E` | Ação e realce de remoção. |
+
+Entretanto, melhor usar as cores definidas no arquivo `colors.ts` para facilitar a manutenção e a manutenção do código.

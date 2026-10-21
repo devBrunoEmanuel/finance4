@@ -1,27 +1,36 @@
-import { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
-import { Link, useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+  Pressable,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "../context/AuthContext";
+import { colors } from "../lib/colors"; // <-- IMPORTAÇÃO DAS CORES
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
     if (!email || !password || !confirm) {
-      Alert.alert('Erro', 'Preencha todos os campos');
+      Alert.alert("Erro", "Preencha todos os campos");
       return;
     }
     if (password !== confirm) {
-      Alert.alert('Erro', 'As senhas não conferem');
+      Alert.alert("Erro", "As senhas não conferem");
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres');
+      Alert.alert("Erro", "A senha deve ter pelo menos 6 caracteres");
       return;
     }
 
@@ -30,10 +39,10 @@ export default function SignUpScreen() {
     setLoading(false);
 
     if (error) {
-      Alert.alert('Erro no cadastro', error.message);
+      Alert.alert("Erro no cadastro", error.message);
     } else {
-      Alert.alert('Sucesso', 'Conta criada! Faça login para continuar.', [
-        { text: 'OK', onPress: () => router.replace('/sign-in') },
+      Alert.alert("Sucesso", "Conta criada! Faça login para continuar.", [
+        { text: "OK", onPress: () => router.replace("/sign-in") },
       ]);
     }
   };
@@ -65,19 +74,27 @@ export default function SignUpScreen() {
         onChangeText={setConfirm}
       />
 
-      <View style={{ alignItems: 'center' }}>
+      <View style={{ alignItems: "center" }}>
         {loading ? (
           <ActivityIndicator size="large" />
         ) : (
-          <Pressable
-            style={styles.btnSignIn} 
-            onPress={handleSignUp}
-          >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Cadastrar</Text>
+          <Pressable style={styles.btnSignIn} onPress={handleSignUp}>
+            <Text
+              style={{
+                color: colors.textInverse,
+                fontSize: 16,
+                fontWeight: "600",
+              }}
+            >
+              Cadastrar
+            </Text>
           </Pressable>
         )}
 
-        <Pressable style={styles.link} onPress={() => router.replace('/sign-in')}>
+        <Pressable
+          style={styles.link}
+          onPress={() => router.replace("/sign-in")}
+        >
           <Text style={styles.linkText}>Já tem conta? Entrar</Text>
         </Pressable>
       </View>
@@ -86,10 +103,34 @@ export default function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: "#b507c530" },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 24 },
-  input: { borderWidth: 1, borderColor: '#b507c5', borderRadius: 8, padding: 12, marginBottom: 16 },
-  link: { marginTop: 16, alignItems: 'center' },
-  linkText: { color: '#0066cc' },
-  btnSignIn: { backgroundColor: '#b507c5', padding: 16, borderRadius: 8, marginTop: 24, width: '90%', justifyContent: 'center', alignItems: 'center' },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: colors.background,
+  },
+  title: {
+    color: colors.textPrimary,
+    fontSize: 28,
+    fontWeight: "bold",
+    marginBottom: 24,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  link: { marginTop: 16, alignItems: "center" },
+  linkText: { color: colors.textLink, fontSize: 16, fontWeight: "600" },
+  btnSignIn: {
+    backgroundColor: colors.primary,
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 24,
+    width: "90%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
