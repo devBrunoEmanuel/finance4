@@ -8,11 +8,15 @@ import {
   ActivityIndicator,
   Pressable,
   Platform,
+  ScrollView,
+  Modal,
+  FlatList,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { supabase } from "../../../lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "../../../lib/colors"; // <-- IMPORTAÇÃO DAS CORES
+import { colors } from "../../../lib/colors";
+import { CATEGORIES } from "../../../lib/categories";
 
 type AccountType = "income" | "expense";
 
@@ -22,6 +26,8 @@ export default function NewAccountScreen() {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]); // YYYY-MM-DD
   const [value, setValue] = useState("");
   const [type, setType] = useState<AccountType>("expense");
+  const [category, setCategory] = useState("");
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const isValidDate = (d: string) =>
@@ -41,6 +47,10 @@ export default function NewAccountScreen() {
       Alert.alert("Erro", "Informe um valor maior que zero");
       return;
     }
+    if (!category) {
+      Alert.alert("Erro", "Selecione uma categoria");
+      return;
+    }
 
     setLoading(true);
     const { error } = await supabase.from("accounts").insert({
@@ -48,6 +58,7 @@ export default function NewAccountScreen() {
       date: new Date(date).toISOString(),
       value: numValue,
       type,
+      category,
     });
     setLoading(false);
 
@@ -64,7 +75,7 @@ export default function NewAccountScreen() {
         <Text style={styles.title}>Nova conta</Text>
       </View>
 
-      <View style={styles.form}>
+      <ScrollView style={styles.form} contentContainerStyle={{ paddingBottom: 120 }}>
         <Text style={styles.label}>Rótulo</Text>
         <TextInput
           style={styles.input}
@@ -90,6 +101,67 @@ export default function NewAccountScreen() {
           onChangeText={setValue}
           keyboardType="decimal-pad"
         />
+
+        <Text style={styles.label}>Categoria</Text>
+        <Pressable
+          style={styles.dropdownBtn}
+          onPress={() => setCategoryModalVisible(true)}
+        >
+          <Text
+            style={[
+              styles.dropdownBtnText,
+              !category && { color: colors.textMuted },
+            ]}
+          >
+            {category || "Selecione uma categoria"}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={colors.primary} />
+        </Pressable>
+
+        {/* Modal de seleção de categoria */}
+        <Modal
+          visible={categoryModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setCategoryModalVisible(false)}
+        >
+          <Pressable
+            style={styles.overlay}
+            onPress={() => setCategoryModalVisible(false)}
+          >
+            <View style={styles.dropdownModal}>
+              <Text style={styles.dropdownModalTitle}>Selecione a categoria</Text>
+              <FlatList
+                data={CATEGORIES}
+                keyExtractor={(item) => item}
+                renderItem={({ item }) => (
+                  <Pressable
+                    style={[
+                      styles.dropdownItem,
+                      category === item && styles.dropdownItemActive,
+                    ]}
+                    onPress={() => {
+                      setCategory(item);
+                      setCategoryModalVisible(false);
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dropdownItemText,
+                        category === item && styles.dropdownItemTextActive,
+                      ]}
+                    >
+                      {item}
+                    </Text>
+                    {category === item && (
+                      <Ionicons name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </Pressable>
+                )}
+              />
+            </View>
+          </Pressable>
+        </Modal>
 
         <Text style={styles.label}>Tipo</Text>
         <View style={styles.typeRow}>
@@ -126,7 +198,7 @@ export default function NewAccountScreen() {
             </Text>
           </Pressable>
         </View>
-      </View>
+      </ScrollView>
 
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 24 }} />
@@ -216,7 +288,69 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    backgroundColor: colors.surface,
   },
+
+  // --- Estilos do dropdown de categoria ---
+  dropdownBtn: {
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: colors.surface,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dropdownBtnText: {
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dropdownModal: {
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    width: "85%",
+    maxHeight: "60%",
+    padding: 16,
+    elevation: 5,
+  },
+  dropdownModalTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: colors.textPrimary,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 8,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  dropdownItemActive: {
+    backgroundColor: colors.primaryMuted,
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  dropdownItemTextActive: {
+    fontWeight: "bold",
+    color: colors.primary,
+  },
+  // ------------------------------------------
+
   typeRow: { flexDirection: "row", gap: 12 },
   typeBtn: {
     flex: 1,

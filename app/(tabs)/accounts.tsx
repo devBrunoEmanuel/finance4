@@ -24,6 +24,7 @@ type Account = {
   date: string;
   value: number;
   type: string;
+  category: string | null;
 };
 
 // Função auxiliar para remover acentos e deixar minúsculo (melhora a busca em português)
@@ -70,7 +71,7 @@ export default function AccountsScreen() {
     setRefreshing(false);
   }, []);
 
-  // --- NOVO: Cálculo do saldo total ---
+  // --- Cálculo do saldo total ---
   const balance = useMemo(() => {
     return accounts.reduce((acc, curr) => {
       if (curr.type === "income") {
@@ -80,9 +81,22 @@ export default function AccountsScreen() {
       }
     }, 0);
   }, [accounts]);
-  // ------------------------------------
 
-  // --- NOVO: Filtragem reativa das contas ---
+  // --- Cálculo do total de receitas e despesas ---
+  const totalIncome = useMemo(() => {
+    return accounts
+      .filter((a) => a.type === "income")
+      .reduce((acc, curr) => acc + curr.value, 0);
+  }, [accounts]);
+
+  const totalExpense = useMemo(() => {
+    return accounts
+      .filter((a) => a.type === "expense")
+      .reduce((acc, curr) => acc + curr.value, 0);
+  }, [accounts]);
+  // -----------------------------------------------
+
+  // --- Filtragem reativa das contas ---
   const filteredAccounts = useMemo(() => {
     if (!searchText.trim()) return accounts;
 
@@ -96,7 +110,12 @@ export default function AccountsScreen() {
       const dateStr = new Date(item.date).toLocaleDateString("pt-BR");
       const dateMatch = dateStr.includes(searchText);
 
-      return labelMatch || dateMatch;
+      // Busca na categoria
+      const categoryMatch = item.category
+        ? normalizeString(item.category).includes(searchNormalized)
+        : false;
+
+      return labelMatch || dateMatch || categoryMatch;
     });
   }, [accounts, searchText]);
   // -------------------------------------------
@@ -143,12 +162,15 @@ export default function AccountsScreen() {
     }
   };
 
-  // --- NOVO: Implementação do handleSearch ---
+  // --- Implementação do handleSearch ---
   const handleSearch = () => {
     Keyboard.dismiss(); // Fecha o teclado ao clicar no botão
     // A filtragem já acontece automaticamente via useMemo enquanto o usuário digita
   };
   // -------------------------------------------
+
+  const formatCurrency = (val: number) =>
+    val.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <View style={styles.container}>
@@ -186,7 +208,7 @@ export default function AccountsScreen() {
         </View>
       </View>
 
-      {/* --- NOVO: Campo de busca --- */}
+      {/* --- Campo de busca --- */}
       <View
         style={[
           styles.searchContainer,
@@ -195,7 +217,7 @@ export default function AccountsScreen() {
       >
         <TextInput
           style={styles.searchInput}
-          placeholder="Buscar por descrição ou data"
+          placeholder="Buscar por descrição, data ou categoria"
           value={searchText}
           onChangeText={setSearchText}
           returnKeyType="search"
@@ -215,20 +237,42 @@ export default function AccountsScreen() {
         </Pressable>
       </View>
 
-      {/* --- Exibição do Saldo --- */}
-      <View style={styles.balanceContainer}>
-        <Text style={styles.balanceLabel}>Saldo Total</Text>
-        <Text
-          style={[
-            styles.balanceValue,
-            balance >= 0 ? styles.income : styles.expense,
-          ]}
-        >
-          {balance.toLocaleString("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          })}
-        </Text>
+      {/* --- Resumo financeiro: Receitas, Despesas e Saldo --- */}
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryItem}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="arrow-up-circle" size={18} color={colors.success} style={{ marginRight: 4 }} />
+            <Text style={styles.summaryLabel}>Receitas</Text>
+          </View>
+          <Text style={[styles.summaryValue, { color: colors.success }]}>
+            {formatCurrency(totalIncome)}
+          </Text>
+        </View>
+
+        <View style={[styles.summaryItem, styles.summaryItemMiddle]}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="arrow-down-circle" size={18} color={colors.danger} style={{ marginRight: 4 }} />
+            <Text style={styles.summaryLabel}>Despesas</Text>
+          </View>
+          <Text style={[styles.summaryValue, { color: colors.danger }]}>
+            {formatCurrency(totalExpense)}
+          </Text>
+        </View>
+
+        <View style={styles.summaryItem}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Ionicons name="wallet" size={18} color={balance >= 0 ? colors.success : colors.danger} style={{ marginRight: 4 }} />
+            <Text style={styles.summaryLabel}>Saldo</Text>
+          </View>
+          <Text
+            style={[
+              styles.summaryValue,
+              { color: balance >= 0 ? colors.success : colors.danger, fontWeight: "bold" },
+            ]}
+          >
+            {formatCurrency(balance)}
+          </Text>
+        </View>
       </View>
       {/* -------------------------------- */}
 
@@ -270,7 +314,7 @@ export default function AccountsScreen() {
                 alignItems: "center",
               }}
             >
-              <Text style={styles.label}>{item.label}</Text>
+              <Text style={styles.cardLabel}>{item.label}</Text>
               <Text
                 style={[
                   styles.value,
@@ -284,6 +328,14 @@ export default function AccountsScreen() {
                 })}
               </Text>
             </View>
+
+            {/* --- Categoria no card --- */}
+            {item.category ? (
+              <View style={styles.categoryBadge}>
+                <Ionicons name="pricetag-outline" size={12} color={colors.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.categoryText}>{item.category}</Text>
+              </View>
+            ) : null}
           </Pressable>
         )}
         ListEmptyComponent={
@@ -414,7 +466,7 @@ const styles = StyleSheet.create({
   },
   exitBtnText: { color: colors.textInverse, fontSize: 16, fontWeight: "600" },
 
-  // --- NOVO: Estilos para o campo de busca ---
+  // --- Estilos para o campo de busca ---
   searchContainer: {
     height: 40,
     flexDirection: "row",
@@ -450,13 +502,13 @@ const styles = StyleSheet.create({
   },
   searchBtnText: { fontSize: 12 },
 
-  // --- ESTILOS PARA O SALDO ---
-  balanceContainer: {
+  // --- ESTILOS PARA O RESUMO FINANCEIRO ---
+  summaryContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: colors.surface,
-    paddingVertical: 8,
+    paddingVertical: 10,
     paddingHorizontal: 8,
     borderRadius: 12,
     marginBottom: 16,
@@ -465,15 +517,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
   },
-  balanceLabel: {
-    fontSize: 14,
+  summaryItem: {
+    flex: 1,
+    alignItems: "center",
+  },
+  summaryItemMiddle: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: colors.border,
+  },
+  summaryLabel: {
+    fontSize: 11,
     color: colors.textSecondary,
     fontWeight: "500",
-    marginBottom: 4,
   },
-  balanceValue: {
-    fontSize: 14,
+  summaryValue: {
+    fontSize: 13,
     fontWeight: "bold",
+    marginTop: 4,
   },
   // ----------------------------------
 
@@ -488,7 +549,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginRight: 8,
   },
-  label: {
+  cardLabel: {
     fontSize: 12,
     fontWeight: "600",
     borderBottomWidth: 1,
@@ -510,6 +571,25 @@ const styles = StyleSheet.create({
   expense: { color: "red" },
   type: { textTransform: "uppercase", fontSize: 10, fontWeight: "bold" },
   empty: { textAlign: "center", marginTop: 24, color: colors.textMuted },
+
+  // --- Estilo do badge de categoria ---
+  categoryBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+    backgroundColor: colors.primaryMuted,
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  categoryText: {
+    fontSize: 11,
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  // ------------------------------------
+
   overlay: {
     flex: 1,
     backgroundColor: colors.overlay,
