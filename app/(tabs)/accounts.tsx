@@ -194,8 +194,8 @@ export default function AccountsScreen() {
           </Pressable>
 
           <Pressable
-            style={[styles.addBtn, { flexDirection: "row" }]}
-            onPress={() => router.push("/(tabs)/accounts/new")}
+            style={styles.addBtn}
+            onPress={() => router.navigate("/(tabs)/accounts/new")}
           >
             <Ionicons
               name="add-circle"
@@ -367,7 +367,7 @@ export default function AccountsScreen() {
               ]}
               onPress={() => {
                 closeMenu();
-                router.push(`/(tabs)/accounts/${selectedAccount?.id}`);
+                router.navigate(`/(tabs)/accounts/${selectedAccount?.id}`);
               }}
             >
               <Ionicons
@@ -441,6 +441,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: "bold", color: colors.textPrimary },
   addBtn: {
+    flexDirection: "row",
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.primary,

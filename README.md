@@ -15,8 +15,13 @@ total e gerenciar lançamentos em uma interface simples em português.
 - Cadastro e login com e-mail e senha.
 - Sessão persistida entre aberturas do aplicativo.
 - Listagem de lançamentos ordenada por data, com atualização por gesto.
-- Saldo total calculado a partir das receitas e despesas.
-- Cadastro e edição de lançamentos com rótulo, data, valor e tipo.
+- Resumo financeiro no topo da lista: total de receitas (crédito), total de
+  despesas (débito) e saldo.
+- Cadastro e edição de lançamentos com rótulo, data, valor, tipo e categoria.
+- Categoria escolhida em um dropdown com opções fixas (Salário, Freelance,
+  Aluguel, Água, Luz, Internet, Telefone, Alimentação, Transporte, Saúde,
+  Educação, Lazer, Vestuário e Diversos), exibida como etiqueta em cada card e
+  incluída na busca. A lista fica em `lib/categories.ts`.
 - Remoção de lançamentos pelo menu exibido ao pressionar um item.
 - Valores formatados em reais (BRL).
 - Execução em Android, iOS e Web.
@@ -56,7 +61,7 @@ app/
 
 ## Tecnologias e pacotes
 
-O projeto usa Expo SDK 57, React Native e Expo Router. Para instalar todas as
+O projeto usa Expo SDK 58, React Native e Expo Router. Para instalar todas as
 dependências declaradas no projeto, tenha Node.js instalado e execute na pasta
 do repositório:
 
@@ -115,9 +120,10 @@ npm install react-native-url-polyfill @react-native-async-storage/async-storage
    Não coloque chaves secretas de servidor no aplicativo. Configure políticas
    de segurança (RLS) no Supabase para proteger os dados dos usuários.
 3. Crie a tabela `accounts` no Supabase. O app espera os campos `id`, `label`,
-   `date`, `value` e `type`. Uma estrutura compatível deve armazenar `id` como
-   identificador, `label` como texto, `date` como data/hora, `value` como
-   número e `type` como texto (`income` para receita ou `expense` para despesa).
+   `date`, `value`, `type` e `category`. Uma estrutura compatível deve
+   armazenar `id` como identificador, `label` como texto, `date` como
+   data/hora, `value` como número, `type` como texto (`income` para receita ou
+   `expense` para despesa) e `category` como texto (categoria da conta).
    Configure também as permissões de leitura, inclusão, edição e remoção
    conforme as regras de acesso do seu projeto.
 
@@ -133,6 +139,7 @@ create table accounts (
   date timestamptz not null default now(),
   value numeric not null,
   type text not null check (type in ('income', 'expense')),
+  category text,
   created_at timestamptz default now()
 );
 
@@ -160,6 +167,14 @@ create trigger on_account_created
   before insert on public.accounts
   for each row
   execute function public.handle_new_account();
+```
+
+Se a tabela `accounts` já existia antes do campo de categoria, adicione a coluna
+com o SQL abaixo (contas antigas ficam com `category` nulo e o card simplesmente
+não mostra a etiqueta):
+
+```sql
+alter table public.accounts add column if not exists category text;
 ```
 
 ### Realtime do Supabase — atualização em tempo real (bônus)

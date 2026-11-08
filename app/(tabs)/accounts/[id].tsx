@@ -87,7 +87,11 @@ export default function EditAccountScreen() {
     if (error) {
       Alert.alert("Erro ao salvar", error.message);
     } else {
-      router.back(); // volta para a lista, que recarrega via useFocusEffect
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.navigate("/(tabs)/accounts");
+      }
     }
   };
 
@@ -256,7 +260,13 @@ export default function EditAccountScreen() {
 
           <Pressable
             style={[styles.btnCancel, { flexDirection: "row" }]}
-            onPress={() => router.back()}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.navigate("/(tabs)/accounts");
+              }
+            }}
           >
             <Ionicons
               name="close-outline"
