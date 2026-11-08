@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { useAuth } from "../context/AuthContext";
 import { colors } from "../lib/colors"; // <-- IMPORTAÇÃO DAS CORES
+import { authErrorMessage } from "../lib/authErrors";
 
 export default function SignUpScreen() {
   const { signUp } = useAuth();
@@ -19,27 +20,30 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  // Mensagem na própria tela: Alert.alert não aparece no navegador (web)
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSignUp = async () => {
-    if (!email || !password || !confirm) {
-      Alert.alert("Erro", "Preencha todos os campos");
+    setErrorMsg("");
+    if (!email.trim() || !password || !confirm) {
+      setErrorMsg("Preencha todos os campos.");
       return;
     }
     if (password !== confirm) {
-      Alert.alert("Erro", "As senhas não conferem");
+      setErrorMsg("As senhas não conferem.");
       return;
     }
     if (password.length < 6) {
-      Alert.alert("Erro", "A senha deve ter pelo menos 6 caracteres");
+      setErrorMsg("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
 
     setLoading(true);
-    const { error } = await signUp(email, password);
+    const { error } = await signUp(email.trim(), password);
     setLoading(false);
 
     if (error) {
-      Alert.alert("Erro no cadastro", error.message);
+      setErrorMsg(authErrorMessage(error.message));
     } else {
       Alert.alert("Sucesso", "Conta criada! Faça login para continuar.", [
         { text: "OK", onPress: () => router.replace("/sign-in") },
@@ -73,6 +77,8 @@ export default function SignUpScreen() {
         value={confirm}
         onChangeText={setConfirm}
       />
+
+      {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
 
       <View style={{ alignItems: "center" }}>
         {loading ? (
@@ -121,6 +127,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+  },
+  error: {
+    color: colors.danger,
+    backgroundColor: colors.dangerLight,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   link: { marginTop: 16, alignItems: "center" },
   linkText: { color: colors.textLink, fontSize: 16, fontWeight: "600" },

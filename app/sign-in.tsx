@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Alert,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
@@ -11,23 +10,27 @@ import { useAuth } from "../context/AuthContext";
 import { Pressable } from "expo-router/build/views/Pressable";
 import { router } from "expo-router";
 import { colors } from "../lib/colors"; // <-- IMPORTAÇÃO DAS CORES
+import { authErrorMessage } from "../lib/authErrors";
 
 export default function SignInScreen() {
   const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  // Mensagem na própria tela: Alert.alert não aparece no navegador (web)
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSignIn = async () => {
-    if (!email || !password) {
-      Alert.alert("Erro", "Preencha email e senha");
+    setErrorMsg("");
+    if (!email.trim() || !password) {
+      setErrorMsg("Preencha email e senha.");
       return;
     }
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email.trim(), password);
     setLoading(false);
     if (error) {
-      Alert.alert("Erro de login", error.message);
+      setErrorMsg(authErrorMessage(error.message));
     }
     // Se não houver erro, o useEffect do _layout redireciona automaticamente
   };
@@ -49,7 +52,9 @@ export default function SignInScreen() {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        onSubmitEditing={handleSignIn}
       />
+      {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
       {loading ? (
         <ActivityIndicator size="large" />
       ) : (
@@ -97,6 +102,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
+  },
+  error: {
+    color: colors.danger,
+    backgroundColor: colors.dangerLight,
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
   },
   link: { marginTop: 16, alignItems: "center" },
   linkText: { color: colors.textLink, fontSize: 16, fontWeight: "600" },
