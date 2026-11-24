@@ -1,17 +1,17 @@
+import { useState } from 'react';
 import { Stack, Redirect, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../context/AuthContext';
-import { ActivityIndicator, View } from 'react-native';
+import SplashScreen from '../components/SplashScreen';
 
 function InitialLayout() {
   const { user, loading } = useAuth();
   const segments = useSegments();
+  const [splashDone, setSplashDone] = useState(false);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+  // Splash Screen: primeira tela do app. Fica visível pelo tempo mínimo
+  // da animação e também enquanto a sessão do usuário ainda está carregando.
+  if (!splashDone || loading) {
+    return <SplashScreen onFinish={() => setSplashDone(true)} />;
   }
 
   const inAuthGroup = segments[0] === '(tabs)';
